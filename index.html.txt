@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>你的隐藏星座 · 测一测</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 20% 30%, #0b0a1a, #05040b);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px 12px 40px;
+            color: #f0eaff;
+        }
+
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) ease-in-out infinite alternate;
+            opacity: 0.3;
+            width: var(--size);
+            height: var(--size);
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.15; transform: scale(0.9); }
+            100% { opacity: 0.9; transform: scale(1.2); }
+        }
+
+        .app-container {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-top: 8px;
+        }
+        .header h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fbbf24 0%, #a855f7 80%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+            text-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+        }
+        .header p {
+            color: #c4b5d4;
+            font-size: 0.95rem;
+            margin-top: 6px;
+            border-top: 1px solid #3b2b5a;
+            padding-top: 10px;
+            display: inline-block;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .progress-area {
+            background: rgba(30, 20, 50, 0.6);
+            backdrop-filter: blur(4px);
+            border-radius: 60px;
+            padding: 6px 6px 6px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #5b3a8a;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+        .progress-track {
+            flex: 1;
+            height: 8px;
+            background: #2a1b3e;
+            border-radius: 20px;
+            margin: 0 12px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #fbbf24, #a855f7);
+            border-radius: 20px;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #e2d5f5;
+            min-width: 55px;
+            text-align: right;
+        }
+
+        .question-card {
+            background: rgba(18, 12, 35, 0.7);
+            backdrop-filter: blur(6px);
+            border: 1px solid #4f3270;
+            border-radius: 28px;
+            padding: 20px 18px 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            transition: all 0.2s;
+        }
+        .question-card .q-title {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #f2ecff;
+            margin-bottom: 14px;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .question-card .q-title .q-num {
+            color: #fbbf24;
+            font-weight: 700;
+            margin-right: 2px;
+        }
+        .question-card .q-title .q-text {
+            color: #f2ecff;
+        }
+        .question-card .q-title .q-sub {
+            font-size: 0.75rem;
+            color: #b8a1d9;
+            margin-left: 6px;
+        }
+
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .options label {
+            background: #261b3a;
+            padding: 8px 18px;
+            border-radius: 40px;
+            border: 1px solid #4d3270;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.15s;
+            color: #d6c8f0;
+        }
+        .options label:hover {
+            background: #3a2957;
+            border-color: #a855f7;
+        }
+        .options input[type="radio"] {
+            accent-color: #fbbf24;
+            width: 16px;
+            height: 16px;
+            transform: scale(1.1);
+        }
+        .options input[type="radio"]:checked + span {
+            color: #fbbf24;
+            font-weight: 500;
+        }
+        .options label:has(input:checked) {
+            background: #3a2957;
+            border-color: #fbbf24;
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.2);
+        }
+        .input-field {
+            background: #1f1435;
+            border: 1px solid #4f3270;
+            border-radius: 60px;
+            padding: 12px 18px;
+            width: 100%;
+            font-size: 1rem;
+            color: #f0eaff;
+            outline: none;
+            transition: 0.2s;
+        }
+        .input-field:focus {
+            border-color: #fbbf24;
+            box-shadow: 0 0 16px rgba(251, 191, 36, 0.15);
+        }
+        .input-field::placeholder {
+            color: #7b689a;
+        }
+        .inline-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .inline-group .input-field {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            border: none;
+            padding: 16px 24px;
+            border-radius: 60px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            width: 100%;
+            margin: 20px 0 10px;
+            cursor: pointer;
+            box-shadow: 0 6px 28px rgba(124, 58, 237, 0.5);
+            transition: 0.2s;
+            letter-spacing: 1px;
+        }
+        .btn-start:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 12px rgba(124, 58, 237, 0.6);
+        }
+        .btn-start:disabled {
+            opacity: 0.4;
+            transform: scale(0.98);
+            pointer-events: none;
+        }
+
+        .result-container {
+            margin-top: 30px;
+            background: rgba(12, 8, 28, 0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 40px;
+            padding: 28px 20px;
+            border: 1px solid #6a4a94;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.8);
+            display: none;
+        }
+        .result-container.show {
+            display: block;
+            animation: fadeSlide 0.5s ease;
+        }
+        @keyframes fadeSlide {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-title {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fbbf24, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 18px;
+        }
+        .result-sub {
+            text-align: center;
+            color: #bba8d9;
+            border-bottom: 1px dashed #4a3270;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+        .zodiac-badge {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 12px 0 22px;
+        }
+        .badge-item {
+            text-align: center;
+        }
+        .badge-item .icon {
+            font-size: 2.8rem;
+            line-height: 1;
+            filter: drop-shadow(0 0 8px #a855f7);
+        }
+        .badge-item .label {
+            font-size: 0.8rem;
+            color: #b8a1d9;
+        }
+        .badge-item .value {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #f2ecff;
+        }
+
+        .trait-block {
+            background: #1b1430;
+            border-radius: 24px;
+            padding: 16px 18px;
+            margin: 16px 0;
+            border-left: 4px solid #fbbf24;
+        }
+        .trait-block h4 {
+            color: #fbbf24;
+            font-size: 1rem;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .trait-block p {
+            color: #d6c8f0;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+        .trait-block p:last-child {
+            margin-bottom: 0;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #3f2a5e;
+            margin: 18px 0;
+        }
+
+        .footnote {
+            text-align: center;
+            color: #5f4c7a;
+            font-size: 0.75rem;
+            margin-top: 30px;
+            border-top: 1px solid #2e1f44;
+            padding-top: 18px;
+            letter-spacing: 0.5px;
+        }
+
+        .highlight-gold {
+            color: #fbbf24;
+            font-weight: 500;
+        }
+        .gold-icon {
+            color: #fbbf24;
+            filter: drop-shadow(0 0 6px #fbbf24);
+            font-weight: 700;
+        }
+        .gold-final {
+            color: #fbbf24;
+            font-weight: 600;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.8rem; }
+            .question-card { padding: 16px; }
+            .options label { padding: 6px 14px; font-size: 0.85rem; }
+            .badge-item .icon { font-size: 2.2rem; }
+            .inline-group .input-field { min-width: 100px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars-container" id="starsContainer"></div>
+
+    <div class="app-container">
+        <div class="header">
+            <h1>✦ 隐藏星座 ✦</h1>
+            <p>15个问题 · 揭开你的星盘真相</p>
+        </div>
+
+        <div class="progress-area">
+            <span style="color:#d6c8f0; font-size:0.9rem;">⚡</span>
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-text" id="progressText">0/15</span>
+        </div>
+
+        <form id="quizForm">
+            <!-- 出生日期卡片 -->
+            <div class="question-card">
+                <div class="q-title">
+                    <span class="gold-icon">✦</span>
+                    <span class="q-text" style="color:#fbbf24; text-shadow:0 0 12px #fbbf24;">出生日期</span>
+                    <span class="q-sub" style="color:#f87171;">*必填</span>
+                </div>
+                <input type="date" class="input-field" id="birthDate" required style="margin-bottom: 10px;">
+
+                <div class="inline-group">
+                    <div style="flex:1; min-width:120px; position:relative;">
+                        <span style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:#fbbf24; font-size:1.1rem; filter:drop-shadow(0 0 6px #fbbf24);">🕒</span>
+                        <input type="time" class="input-field" id="birthTime" placeholder="出生时间 (选填)" style="padding-left: 44px;">
+                    </div>
+                    <input type="text" class="input-field" id="birthPlace" placeholder="出生地点 (选填)">
+                </div>
+            </div>
+
+            <!-- 15个问题 -->
+            <div id="questionsContainer"></div>
+
+            <button type="button" class="btn-start" id="startBtn">✦ 开始测试 ✦</button>
+        </form>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-title">⚡ 你的另一面 ⚡</div>
+            <div id="resultContent"></div>
+            <div class="footnote">仅供娱乐 · AI生成</div>
+        </div>
+
+        <div class="footnote" style="margin-top:10px; border-top: none; padding-top: 0;">对话由 AI 生成</div>
+    </div>
+
+    <script>
+        (function() {
+            // 星星
+            const container = document.getElementById('starsContainer');
+            for (let i = 0; i < 80; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = (Math.random() * 3 + 1.5) + 'px';
+                star.style.setProperty('--size', size);
+                star.style.width = size;
+                star.style.height = size;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+                star.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(star);
+            }
+
+            // ----- 15个问题 -----
+            const questions = [
+                { id: 'q1', text: '你梦想中的出生地是哪里？', options: ['A. 繁华都市 · 霓虹灯下的不夜城，越夜越精彩', 'B. 安静小镇 · 小桥流水人家，岁月静好如画', 'C. 海边 · 面朝大海，海浪声是最好的白噪音', 'D. 山林 · 森系秘境，与鸟兽为邻，呼吸都是甜的'] },
+                { id: 'q2', text: '彩虹里面你最喜欢第几个颜色？', options: ['1', '2', '3', '4', '5', '6', '7'], isNumber: true },
+                { id: 'q3', text: '当你遇到无法解决的事情时，你的第一反应是？', options: ['A. 找朋友帮忙 · 一顿饭局解决不了的事，那就两顿', 'B. 自己硬扛 · 咬碎牙往肚子里咽，真正的猛士', 'C. 逃避 · 只要我不看，问题就不存在（虽可耻但有用）', 'D. 冷静分析 · 拿起小本本列个Excel，我命由我不由天'] },
+                { id: 'q4', text: '你更相信直觉还是逻辑？', options: ['A. 直觉 · 第六感是我的人生导航，准到离谱', 'B. 逻辑 · 一切皆可推理，但感情面前往往翻车', 'C. 两者结合 · 玄学与科学并重，该信谁看心情'] },
+                { id: 'q5', text: '你最喜欢的季节？', options: ['A. 春天 · 百花齐放，连空气都是恋爱的味道', 'B. 夏天 · 烈日骄阳，冰镇西瓜，就该热血沸腾', 'C. 秋天 · 落叶纷飞，文艺青年的标配季节', 'D. 冬天 · 寒风凛冽，围炉夜话，越冷越清醒'] },
+                { id: 'q6', text: '你更倾向于独处还是社交？', options: ['A. 独处 · 一个人就是一支队伍，社恐的快乐你不懂', 'B. 社交 · 派对动物本物，没有社交我会枯萎', 'C. 两者平衡 · 可E可I，社交场合的变色龙'] },
+                { id: 'q7', text: '你觉得自己最大的优点是？', options: ['A. 善良 · 人间小天使，看到流浪猫都想给它安个家', 'B. 聪明 · 智商在线，脑回路堪比超算中心', 'C. 勇敢 · 天不怕地不怕，敢在雷雨天出门收衣服', 'D. 幽默 · 行走的段子手，朋友圈的快乐源泉'] },
+                { id: 'q8', text: '你觉得自己最大的缺点是？', options: ['A. 拖延 · DDL是第一生产力，但心脏真的受不了', 'B. 急躁 · 连等个外卖都要刷新八百遍物流信息', 'C. 敏感 · 别人随口一句话，你能琢磨三天三夜', 'D. 固执 · 撞了南墙也不回头，还想把墙拆了铺路'] },
+                { id: 'q9', text: '你更愿意生活在过去、现在还是未来？', options: ['A. 过去 · 活在回忆里的文艺青年，旧时光滤镜拉满', 'B. 现在 · 活在当下，及时行乐才是人生真谛', 'C. 未来 · 梦想家本家，已经在规划下下周的日程了'] },
+                { id: 'q10', text: '你最喜欢的动物是？', options: ['A. 猫 · 高冷傲娇，爱你但绝不承认', 'B. 狗 · 忠诚热情，看到你就疯狂摇尾巴', 'C. 狼 · 独行侠本侠，神秘的孤狼气质', 'D. 鹰 · 志存高远，俯瞰众生的天空王者'] },
+                { id: 'q11', text: '你面对压力时通常会？', options: ['A. 吃东西 · 没有什么是一顿火锅解决不了的，有就两顿', 'B. 运动 · 暴汗解压，多巴胺比爱情还靠谱', 'C. 睡觉 · 一睡解千愁，梦里什么都有', 'D. 找人倾诉 · 把朋友当树洞，吐槽完神清气爽'] },
+                { id: 'q12', text: '你更看重爱情还是事业？', options: ['A. 爱情 · 恋爱脑晚期，但甘之如饴', 'B. 事业 · 搞钱要紧，爱情可以等一等', 'C. 两者平衡 · 既要面包又要玫瑰，成年人全都要'] },
+                { id: 'q13', text: '你相信命运吗？', options: ['A. 相信 · 一切都是最好的安排，躺平也是种智慧', 'B. 不相信 · 我命由我不由天，人定胜天', 'C. 半信半疑 · 信则有不信则无，看情况玄学一下'] },
+                { id: 'q14', text: '用一句话描述你自己', options: [], isText: true, placeholder: '一句话，够了...' },
+                { id: 'q15', text: '如果你给自己取一个名字，你会选择什么名字？', options: [], isText: true, placeholder: '例如：星辰、夜岚...' }
+            ];
+
+            // 渲染问题
+            const containerQ = document.getElementById('questionsContainer');
+            questions.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.dataset.qid = q.id;
+
+                let optionsHtml = '';
+                if (q.isText) {
+                    optionsHtml = `<input type="text" class="input-field" id="${q.id}" placeholder="${q.placeholder || '输入你的答案...'}" style="margin-top:4px;">`;
+                } else if (q.isNumber) {
+                    q.options.forEach(opt => {
+                        optionsHtml += `
+                            <label>
+                                <input type="radio" name="${q.id}" value="${opt}">
+                                <span>${opt}</span>
+                            </label>
+                        `;
+                    });
+                } else {
+                    q.options.forEach(opt => {
+                        optionsHtml += `
+                            <label>
+                                <input type="radio" name="${q.id}" value="${opt}">
+                                <span>${opt}</span>
+                            </label>
+                        `;
+                    });
+                }
+
+                card.innerHTML = `
+                    <div class="q-title">
+                        <span class="q-num">${index+1}.</span>
+                        <span class="q-text">${q.text}</span>
+                    </div>
+                    <div class="options">${optionsHtml}</div>
+                `;
+                containerQ.appendChild(card);
+            });
+
+            // 获取答案
+            function getAnswers() {
+                const answers = {};
+                questions.forEach(q => {
+                    if (q.isText) {
+                        const el = document.getElementById(q.id);
+                        answers[q.id] = el ? el.value.trim() : '';
+                    } else {
+                        const selected = document.querySelector(`input[name="${q.id}"]:checked`);
+                        answers[q.id] = selected ? selected.value : '';
+                    }
+                });
+                return answers;
+            }
+
+            // 更新进度
+            function updateProgress() {
+                const ans = getAnswers();
+                let count = 0;
+                questions.forEach(q => {
+                    const val = ans[q.id];
+                    if (val && val.length > 0) count++;
+                });
+                const birthDate = document.getElementById('birthDate').value;
+                if (birthDate) count++;
+
+                const total = questions.length + 1;
+                const pct = Math.min(100, Math.round((count / total) * 100));
+                document.getElementById('progressFill').style.width = pct + '%';
+                document.getElementById('progressText').textContent = `${Math.min(count, total)}/${total}`;
+            }
+
+            document.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('change', updateProgress);
+                el.addEventListener('input', updateProgress);
+            });
+            updateProgress();
+
+            // ----- 星座计算 -----
+            function getSunSign(month, day) {
+                const signs = [
+                    [1,20,'♒ 水瓶座'],[2,19,'♓ 双鱼座'],[3,21,'♈ 白羊座'],[4,20,'♉ 金牛座'],
+                    [5,21,'♊ 双子座'],[6,21,'♋ 巨蟹座'],[7,23,'♌ 狮子座'],[8,23,'♍ 处女座'],
+                    [9,23,'♎ 天秤座'],[10,24,'♏ 天蝎座'],[11,23,'♐ 射手座'],[12,22,'♑ 摩羯座']
+                ];
+                for (let i = 0; i < signs.length; i++) {
+                    if ((month === signs[i][0] && day >= signs[i][1]) || (month === signs[i][0]+1 % 12)) {
+                        return signs[i][2];
+                    }
+                }
+                return '♑ 摩羯座';
+            }
+
+            function getMoonSign(month, day) {
+                const map = [
+                    [1,20,'♋ 巨蟹座'],[2,19,'♌ 狮子座'],[3,21,'♍ 处女座'],[4,20,'♎ 天秤座'],
+                    [5,21,'♏ 天蝎座'],[6,21,'♐ 射手座'],[7,23,'♑ 摩羯座'],[8,23,'♒ 水瓶座'],
+                    [9,23,'♓ 双鱼座'],[10,24,'♈ 白羊座'],[11,23,'♉ 金牛座'],[12,22,'♊ 双子座']
+                ];
+                for (let i = 0; i < map.length; i++) {
+                    if ((month === map[i][0] && day >= map[i][1]) || (month === map[i][0]+1 % 12)) {
+                        return map[i][2];
+                    }
+                }
+                return '♊ 双子座';
+            }
+
+            function getRisingSign(timeStr) {
+                if (!timeStr) return '♌ 狮子座 (上升)';
+                const hour = parseInt(timeStr.split(':')[0]);
+                const signs = ['♈ 白羊','♉ 金牛','♊ 双子','♋ 巨蟹','♌ 狮子','♍ 处女','♎ 天秤','♏ 天蝎','♐ 射手','♑ 摩羯','♒ 水瓶','♓ 双鱼'];
+                const idx = (hour % 12);
+                return signs[idx] + ' (上升)';
+            }
+
+            // ----- 100+ 职业库 (不重复) -----
+            const CAREER_POOL = [
+                '技术研发', '数据分析', '策略咨询', '自媒体', '公关营销',
+                '前端开发', '后端架构', '算法工程师', '数据科学家', '机器学习',
+                '产品经理', '项目经理', '运营总监', '市场策划', '品牌管理',
+                'UI/UX设计', '视觉设计', '交互设计', '游戏策划', '游戏开发',
+                '金融分析师', '投资顾问', '风险管理', '审计师', '会计师',
+                '律师', '法务顾问', '合规专员', '知识产权', '专利代理人',
+                '医生', '护士', '药剂师', '心理咨询师', '营养师',
+                '教师', '教授', '教育顾问', '课程设计', '培训师',
+                '记者', '编辑', '内容策划', '编剧', '导演',
+                '摄影师', '摄像师', '剪辑师', '动画师', '特效师',
+                '建筑师', '土木工程师', '结构工程师', '室内设计', '景观设计',
+                '机械工程师', '电气工程师', '自动化', '机器人', '航空航天',
+                '生物技术', '化学研究', '物理研究', '环境科学', '地质学',
+                '社会工作者', '非营利管理', '公益策划', '志愿者协调', '社区发展',
+                '销售经理', '客户成功', '商务拓展', '渠道管理', '大客户销售',
+                '人力资源', '招聘顾问', '薪酬绩效', '组织发展', '员工关系',
+                '供应链管理', '物流规划', '采购经理', '仓储管理', '运输调度',
+                '音乐家', '画家', '雕塑家', '舞蹈家', '演员',
+                '作家', '诗人', '翻译', '语言治疗', '配音演员',
+                '厨师', '糕点师', '品酒师', '咖啡师', '调酒师',
+                '健身教练', '瑜伽导师', '运动康复', '体育管理', '运动员',
+                '数据分析师', '商业智能', '量化研究', '统计专家', '市场调研',
+                '网络安全', '系统架构', '云计算', '区块链', '物联网',
+                '时尚设计师', '造型师', '买手', '模特', '化妆师',
+                '考古学家', '历史学者', '哲学研究', '文化研究', '语言学家',
+                '心理咨询', '精神科', '家庭治疗', '职业规划', '人生教练'
+            ];
+
+            // 从职业库中随机取5个不重复
+            function getRandomCareers(count = 5) {
+                const shuffled = [...CAREER_POOL];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled.slice(0, count);
+            }
+
+            // ----- 多组文案库 (10组不同风格) -----
+            const TRAIT_SETS = [
+                // 0: 敏锐洞察型
+                {
+                    trait: ['你拥有超乎常人的感知力，能捕捉到别人忽略的细节和情绪。这不是脆弱，这是你的天赋雷达——你比别人更早感知到危险，也比别人更深刻体会到美好。','敏感的人才能看到世界最细腻的纹理，你是那个读懂了生活密码的人。','你的处女座外壳与天蝎座内核不是对立，而是互补——精密与深邃的结合，让你拥有了双重视角和多维度的思考方式。','白天与夜晚的你都是真实的，正是这种丰富的内在层次，让你成为了一个有趣且深刻的人。'],
+                    dark: ['你的敏感也容易让你过度内耗，别人随口一句话，你能琢磨三天三夜。','你太容易看透别人，也太容易让别人看透你的不耐烦。','记住：真正的强大是允许自己休息，你的阴暗面也是你的一部分。'],
+                    emotion: ['你在感情里像猫——高冷傲娇，爱你但绝不承认。','你渴望深刻的连接，但害怕被看透。','恋爱脑晚期，但甘之如饴。']
+                },
+                // 1: 理性行动型
+                {
+                    trait: ['你的脑子转得比陀螺还快，学东西快、反应快、看人准。你那种“一眼看穿本质”的能力让周围的人又羡慕又嫉妒。','但聪明反被聪明误也是你的魔咒——你太容易看透别人，也太容易让别人看透你的不耐烦。','真正的聪明是让别人觉得你深不可测，而你恰好拥有这种天赋。','你的处女座精密逻辑 + 天蝎座深度洞察 = 行走的人间清醒。'],
+                    dark: ['你最大的敌人不是别人，是你那想太多的内耗。','执行力是你唯一的短板——天赋只是入场券，执行力才是VIP席位。','别让“想太多”毁掉你的“做太多”，先干它100天再说。'],
+                    emotion: ['你在感情里像狼——独行侠本侠，神秘又深情。','你不轻易交心，但一旦认定了，就是一辈子。','爱情对你来说是奢侈品，不是必需品。']
+                },
+                // 2: 浪漫理想型
+                {
+                    trait: ['你活在诗与远方的交界处，现实与幻想的缝隙里。你的灵魂里住着一个吟游诗人。','你的处女座外壳让你在现实中脚踏实地，但天蝎座内核让你永远向往深海与星空。','你是那种会在深夜看星星看到流泪的人，不是矫情，是感知力太强。','你的浪漫不是粉红色泡泡，而是看透生活真相后依然热爱生活的勇气。'],
+                    dark: ['你的理想主义让你在现实中常常碰壁，不是世界太残酷，是你太温柔。','你太容易共情，别人的痛苦像刀子一样扎在你心上。','学会给自己的心装上防弹玻璃，你才能走得更远。'],
+                    emotion: ['你在感情里像海——深邃、包容、温柔，但也有吞噬一切的暗流。','你爱一个人就是全部，不留退路，不给自己留余地。','恋爱脑晚期？不，你是用尽全力去爱，这没什么可耻的。']
+                },
+                // 3: 清醒务实型
+                {
+                    trait: ['你是人群中最清醒的那一个，别人在狂欢你在思考，别人在emo你在复盘。','你的处女座给了你完美的逻辑框架，天蝎座给了你看透人性的眼睛。','你不是冷漠，你是太清楚世界的运行规则，所以选择冷静旁观。','你的深度不是装出来的，是刻在骨子里的。'],
+                    dark: ['你的清醒让你有时候显得格格不入，甚至有点“冷血”。','你太容易看穿别人的把戏，所以很难真正信任一个人。','试着偶尔“糊涂”一下，人生不是所有的题都需要解。'],
+                    emotion: ['你在感情里像鹰——志存高远，俯瞰众生。','你追求的是灵魂共振，而不是肤浅的陪伴。','你宁愿孤独，也不愿将就。']
+                },
+                // 4: 神秘深邃型
+                {
+                    trait: ['你是那种“看起来很好懂，实际上没人真正懂”的人。你的外壳是处女座的精致，内核是天蝎座的深渊。','你擅长隐藏，也擅长窥探——你能看穿别人，但别人看不穿你。','你的存在本身就是一种谜题，而你喜欢保持这种神秘感。','你的深度让你在人群中显得孤独，但也让你独一无二。'],
+                    dark: ['你的神秘感是你最大的武器，也是你最大的牢笼。','你害怕被看透，所以把自己层层包裹，最后连自己都忘了真实的模样。','试着拆掉一堵墙，让阳光照进来。'],
+                    emotion: ['你在感情里像深海——表面平静，底下暗流汹涌。','你爱得深沉，也痛得彻底。','你是那种“要么不爱，要么爱到骨子里”的人。']
+                },
+                // 5: 创意先锋型
+                {
+                    trait: ['你的脑子里装着一个平行宇宙，每天都有无数个奇思妙想在碰撞。','处女座的完美主义让你精益求精，天蝎座的深邃让你直击灵魂。','你是那种能把“不切实际”变成“惊艳全场”的人。','你的创意不是天马行空，而是有根有据的颠覆。'],
+                    dark: ['你的想法太多，有时候反而让自己陷入选择困难。','你太在意别人是否理解你的创意，反而束缚了自己。','记住：伟大的作品从来不是被所有人理解的。'],
+                    emotion: ['你在感情里像风——自由、不羁、难以捉摸。','你爱一个人不是因为对方是谁，而是因为和对方在一起时你是谁。','你的浪漫藏在细节里，一个眼神就够。']
+                },
+                // 6: 温柔治愈型
+                {
+                    trait: ['你有一种让人安心的力量，像深夜的一盏灯，像冬日的一杯热茶。','你的处女座细腻让你能照顾到每个人的情绪，天蝎座的深刻让你能真正理解别人的痛苦。','你是朋友圈里的“树洞”，是别人崩溃时的“安全网”。','你的温柔不是软弱，是看透世界后依然选择善良。'],
+                    dark: ['你总是把别人的需求放在第一位，却忘了自己也需要被治愈。','你太容易吸收别人的情绪，导致自己疲惫不堪。','学会设立边界，你的温柔要给值得的人。'],
+                    emotion: ['你在感情里像月光——温柔、静谧、从不喧宾夺主。','你爱得含蓄，但爱得深沉。','你的爱是“润物细无声”的那种，不经意间已经渗透了对方的生活。']
+                },
+                // 7: 冒险挑战型
+                {
+                    trait: ['你的人生信条是“要么不做，要么做到极致”。','处女座的完美主义 + 天蝎座的执着 = 你一旦锁定目标，九头牛都拉不回来。','你享受挑战，享受在刀尖上跳舞的感觉。','你的勇气不是鲁莽，是深思熟虑后的孤注一掷。'],
+                    dark: ['你的好胜心有时候会让你忽略身边的人和事。','你太执着于“赢”，反而忘了享受过程。','学会接受失败，有时候“输”也是一种成长。'],
+                    emotion: ['你在感情里像火——热烈、直接、燃烧一切。','你爱一个人就轰轰烈烈，不留遗憾。','你的爱情观是“要么全有，要么全无”。']
+                },
+                // 8: 哲学沉思型
+                {
+                    trait: ['你天生就是哲学家，总是在思考那些“没有答案”的问题。','处女座的逻辑让你能把复杂的问题拆解清楚，天蝎座的直觉让你能触及问题的本质。','你喜欢独处，因为只有在独处时，你才能和自己对话。','你的深度让你在人群中显得有些“不合群”，但你知道，这是你独特的礼物。'],
+                    dark: ['你的思考有时候会陷入“无限循环”，越想越迷茫。','你太追求“意义”，反而忘了生活本身就是意义。','试着活在当下，别让思考绑架了你的生活。'],
+                    emotion: ['你在感情里像书——需要慢慢翻阅，才能读懂其中的深意。','你追求的是精神上的共鸣，而不是肉体上的陪伴。','你的爱是“柏拉图式”的，灵魂的契合比什么都重要。']
+                },
+                // 9: 社交外交型
+                {
+                    trait: ['你是人群中的“润滑剂”，总有办法让尴尬的场面变得融洽。','处女座的细致让你能记住每个人的喜好，天蝎座的洞察让你能看穿每个人的需求。','你是天生的连接者，能把不同的人聚在一起。','你的社交能力不是圆滑，是真诚的共情。'],
+                    dark: ['你太在意别人的看法，有时候会为了迎合别人而委屈自己。','你太容易进入别人的生活，反而忘了自己的边界。','学会“自私”一点，你的感受也很重要。'],
+                    emotion: ['你在感情里像蝴蝶——美丽、自由、到处飞翔。','你爱一个人是因为对方能让你“做自己”。','你的爱情是“彼此成就”，而不是“彼此束缚”。']
+                }
+            ];
+
+            // 根据多个答案组合选择文案组 (使用 q1,q4,q7,q9,q12)
+            function selectTraitSet(answers) {
+                const q1 = answers.q1 || '';
+                const q4 = answers.q4 || '';
+                const q7 = answers.q7 || '';
+                const q9 = answers.q9 || '';
+                const q12 = answers.q12 || '';
+
+                let score = 0;
+                // q1: 都市/海边 → 浪漫型(2) 或 社交型(9); 小镇/山林 → 深邃型(4) 或 哲学型(8)
+                if (q1.includes('都市')) score += 2;
+                else if (q1.includes('海边')) score += 3;
+                else if (q1.includes('小镇')) score += 1;
+                else if (q1.includes('山林')) score += 4;
+
+                // q4: 直觉 → 敏锐(0) 或 浪漫(2); 逻辑 → 理性(1) 或 清醒(3); 结合 → 创意(5) 或 哲学(8)
+                if (q4.includes('直觉')) score += 1;
+                else if (q4.includes('逻辑')) score += 2;
+                else if (q4.includes('结合')) score += 3;
+
+                // q7: 善良 → 温柔(6); 聪明 → 理性(1) 或 创意(5); 勇敢 → 冒险(7); 幽默 → 社交(9)
+                if (q7.includes('善良')) score += 2;
+                else if (q7.includes('聪明')) score += 1;
+                else if (q7.includes('勇敢')) score += 4;
+                else if (q7.includes('幽默')) score += 5;
+
+                // q9: 过去 → 哲学(8) 或 浪漫(2); 现在 → 冒险(7) 或 温柔(6); 未来 → 创意(5) 或 理性(1)
+                if (q9.includes('过去')) score += 1;
+                else if (q9.includes('现在')) score += 2;
+                else if (q9.includes('未来')) score += 3;
+
+                // q12: 爱情 → 浪漫(2) 或 温柔(6); 事业 → 理性(1) 或 冒险(7); 平衡 → 社交(9) 或 创意(5)
+                if (q12.includes('爱情')) score += 2;
+                else if (q12.includes('事业')) score += 1;
+                else if (q12.includes('平衡')) score += 3;
+
+                const idx = (score % 10 + 10) % 10;
+                return TRAIT_SETS[idx];
+            }
+
+            // ----- 名人名言库 (中西结合, 从古诗三百/西方哲人) -----
+            const QUOTES = [
+                { cn: '“知人者智，自知者明。”', en: 'Know thyself.' },
+                { cn: '“认识你自己。”', en: 'Nosce te ipsum.' },
+                { cn: '“未经审视的人生不值得过。”', en: 'The unexamined life is not worth living.' },
+                { cn: '“我是谁？我从哪里来？我要到哪里去？”', en: 'Who am I? Where do I come from? Where am I going?' },
+                { cn: '“人贵有自知之明。”', en: 'Self-knowledge is the beginning of wisdom.' },
+                { cn: '“自知者不怨人，知命者不怨天。”', en: 'He who knows himself does not blame others.' },
+                { cn: '“君子求诸己，小人求诸人。”', en: 'The gentleman seeks within himself.' },
+                { cn: '“吾日三省吾身。”', en: 'I reflect on myself three times a day.' },
+                { cn: '“知之为知之，不知为不知，是知也。”', en: 'To know what you know and what you do not know, that is true knowledge.' },
+                { cn: '“博学而笃志，切问而近思。”', en: 'Learn widely and be firm in your purpose.' },
+                { cn: '“见贤思齐焉，见不贤而内自省也。”', en: 'When you see a worthy person, emulate them.' },
+                { cn: '“君子坦荡荡，小人长戚戚。”', en: 'The gentleman is open and at ease.' },
+                { cn: '“穷则独善其身，达则兼济天下。”', en: 'In poverty, cultivate yourself; in success, help the world.' },
+                { cn: '“天生我材必有用。”', en: 'Heaven has endowed me with talents for use.' },
+                { cn: '“路漫漫其修远兮，吾将上下而求索。”', en: 'The road is long, I will search high and low.' },
+                { cn: '“山重水复疑无路，柳暗花明又一村。”', en: 'Where mountains and streams end, there is a village in the willows.' },
+                { cn: '“采菊东篱下，悠然见南山。”', en: 'Picking chrysanthemums by the eastern fence, I see the southern mountain.' },
+                { cn: '“人生得意须尽欢，莫使金樽空对月。”', en: 'When life is joyful, enjoy it fully.' },
+                { cn: '“相逢何必曾相识。”', en: 'Why need we have known each other before?' },
+                { cn: '“海内存知己，天涯若比邻。”', en: 'If you have a friend afar, the world is like a village.' },
+                { cn: '“I think, therefore I am.”', en: 'Cogito, ergo sum.' },
+                { cn: '“To be or not to be, that is the question.”', en: 'To be or not to be, that is the question.' },
+                { cn: '“The only true wisdom is in knowing you know nothing.”', en: 'The only true wisdom is in knowing you know nothing.' }
+            ];
+
+            function getRandomQuote() {
+                const idx = Math.floor(Math.random() * QUOTES.length);
+                return QUOTES[idx];
+            }
+
+            // ----- 生成报告 -----
+            function generateReport(birthDate, birthTime, birthPlace, answers) {
+                let sunSign = '♍ 处女座', moonSign = '♋ 巨蟹座', risingSign = '♌ 狮子座';
+                if (birthDate) {
+                    const parts = birthDate.split('-');
+                    const month = parseInt(parts[1]), day = parseInt(parts[2]);
+                    sunSign = getSunSign(month, day);
+                    moonSign = getMoonSign(month, day);
+                }
+                if (birthTime) {
+                    risingSign = getRisingSign(birthTime);
+                }
+
+                let hiddenSign = '♏ 天蝎座';
+                if (moonSign.includes('天蝎') || sunSign.includes('天蝎')) hiddenSign = '♏ 天蝎座';
+                else if (moonSign.includes('巨蟹')) hiddenSign = '♋ 巨蟹座';
+                else if (moonSign.includes('双鱼')) hiddenSign = '♓ 双鱼座';
+                else hiddenSign = '♏ 天蝎座';
+
+                // 选择文案组
+                const set = selectTraitSet(answers);
+                // 随机职业
+                const careerList = getRandomCareers(5);
+                // 随机名言
+                const quote = getRandomQuote();
+
+                const careerDesc = '你的性格特质分析下来，这些领域最能发挥你的天赋。你的处女座给了你土象的行动力，加上天蝎座那些藏起来的特质，让你在技术研发这个方向上有天然的优势——别人需要努力才能达到的高度，你靠天赋就能摸到门槛。但别高兴太早，天赋只是入场券，执行力才是VIP席位。你最大的敌人不是别人，是你那想太多的内耗。建议你选一个方向，先干它100天——别想太多，先做。做完了再来找我改命。总之就是：你的职业天赋是“V”的，但执行力是“待优化”的。家人们谁懂啊，这年头光有天赋真的卷不动了！';
+
+                return {
+                    sunSign,
+                    moonSign,
+                    risingSign,
+                    hiddenSign,
+                    traitLines: set.trait,
+                    darkLines: set.dark,
+                    emotionLines: set.emotion,
+                    careerLines: careerList,
+                    careerDesc,
+                    quote
+                };
+            }
+
+            // 点击测试
+            document.getElementById('startBtn').addEventListener('click', function() {
+                const birthDate = document.getElementById('birthDate').value;
+                if (!birthDate) {
+                    alert('请填写出生日期 (必填)');
+                    return;
+                }
+                const answers = getAnswers();
+                let filled = 0;
+                for (let key in answers) {
+                    if (answers[key] && answers[key].length > 0) filled++;
+                }
+                if (filled < 3) {
+                    alert('请至少回答几个问题，让星盘更准确 ✦');
+                    return;
+                }
+
+                const birthTime = document.getElementById('birthTime').value;
+                const birthPlace = document.getElementById('birthPlace').value;
+                const report = generateReport(birthDate, birthTime, birthPlace, answers);
+                displayResult(report);
+            });
+
+            function displayResult(report) {
+                const container = document.getElementById('resultContainer');
+                const content = document.getElementById('resultContent');
+                container.classList.add('show');
+
+                const { sunSign, moonSign, risingSign, hiddenSign, traitLines, darkLines, emotionLines, careerLines, careerDesc, quote } = report;
+
+                const traitsHtml = traitLines.map(line => `<p>${line}</p>`).join('');
+                const darkHtml = darkLines.map(line => `<p>${line}</p>`).join('');
+                const emotionHtml = emotionLines.map(line => `<p>${line}</p>`).join('');
+                const careerItems = careerLines.map(c => `<span style="display:inline-block; background:#2a1b46; padding:4px 16px; border-radius:20px; margin:4px 6px 4px 0; border:1px solid #5b3a8a; color:#fbbf24;">${c}</span>`).join('');
+
+                content.innerHTML = `
+                    <div class="result-sub">面具之下的你，远比想象中复杂</div>
+                    <div class="zodiac-badge">
+                        <div class="badge-item"><div class="icon">☀️</div><div class="label">太阳星座</div><div class="value">${sunSign}</div></div>
+                        <div class="badge-item"><div class="icon">🌙</div><div class="label">月亮星座</div><div class="value">${moonSign}</div></div>
+                        <div class="badge-item"><div class="icon">⬆️</div><div class="label">上升星座</div><div class="value">${risingSign}</div></div>
+                    </div>
+                    <div style="text-align:center; margin: 4px 0 14px; font-size:1.3rem; background: #2a1b46; padding:8px; border-radius:60px;">
+                        <span class="highlight-gold">✦ 隐藏星座：${hiddenSign} ✦</span>
+                    </div>
+
+                    <div class="trait-block"><h4>🔮 你的另一面</h4>
+                        ${traitsHtml}
+                    </div>
+
+                    <div class="trait-block" style="border-left-color:#a855f7;"><h4>🌓 阴影面</h4>
+                        ${darkHtml}
+                    </div>
+
+                    <div class="trait-block" style="border-left-color:#fbbf24;"><h4>💼 适合的职业方向</h4>
+                        <div style="margin-bottom:10px;">${careerItems}</div>
+                        <p style="color:#d6c8f0;">${careerDesc}</p>
+                    </div>
+
+                    <div class="trait-block" style="border-left-color:#c084fc;"><h4>❤️ 情感模式</h4>
+                        ${emotionHtml}
+                    </div>
+
+                    <hr class="divider">
+                    <p style="color:#b8a1d9; font-size:0.95rem; text-align:center; font-style:italic;">${quote.cn}</p>
+                    <p style="color:#8b75a8; font-size:0.85rem; text-align:center; margin-top:4px;">${quote.en}</p>
+                    <p style="text-align:center; margin-top:14px; font-size:1.2rem; letter-spacing:1px;">
+                        <span class="gold-final">✦ Know thyself. ✦</span>
+                    </p>
+                `;
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        })();
+    </script>
+</body>
+</html>
